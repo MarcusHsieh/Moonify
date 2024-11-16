@@ -56,6 +56,8 @@ def detect_gesture(landmarks):
 
 # gesture log (debugging)
 def process_gesture_log():
+    global last_action
+
     # counts
     gesture_counts = {
         "Next Song": gesture_log.count("Next Song"),
@@ -64,12 +66,17 @@ def process_gesture_log():
     }
 
     # log IFF gesture detected multiple times
-    if gesture_counts["Next Song"] >= 2:
+    if gesture_counts["Next Song"] >= 2 and last_action != "Next Song":
+        last_action = "Next Song"
         return "Next Song Confirmed"
-    elif gesture_counts["Previous Song"] >= 2:
+    elif gesture_counts["Previous Song"] >= 2 and last_action != "Previous Song":
+        last_action = "Previous Song"
         return "Previous Song Confirmed"
-    elif gesture_counts["Pause/Play"] >= 15:
+    elif gesture_counts["Pause/Play"] >= 15 and last_action != "Pause/Play":
+        last_action = "Pause/Play"
         return "Pause/Play Confirmed"
+    elif gesture_counts["Next Song"] < 2 and gesture_counts["Previous Song"] < 2 and gesture_counts["Pause/Play"] < 15:
+        last_action = "No Gesture"  # no special gesture detected => reset last action 
     else:
         return "No Gesture"
 
