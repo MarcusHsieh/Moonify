@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import math
+from collections import deque
 
 # start mediapipe hand module
 mp_hands = mp.solutions.hands
@@ -8,8 +9,11 @@ hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7)
 mp_draw = mp.solutions.drawing_utils
 
 # swipe detection
-previous_x = None
-swipe_threshold = 0.1
+index_position_log = deque(maxlen=5)  
+flick_speed_threshold = 0.3
+
+# confirmation logs
+gesture_log = deque(maxlen=15)
 
 # dist calc
 def calculate_distance(point1, point2):
@@ -17,7 +21,7 @@ def calculate_distance(point1, point2):
 
 # primary gesture detection func
 def detect_gesture(landmarks):
-    global previous_x
+    global index_position_log
 
     # for pinch
     thumb_tip = landmarks[4]
@@ -27,25 +31,45 @@ def detect_gesture(landmarks):
     # pinch threshold
     is_play_pause = thumb_index_distance < 0.05
 
-    # wrist detection for swipe
-    current_x = landmarks[0].x
+    # index detection for swipe
+    current_index_x = index_tip.x
+    index_position_log.append(current_index_x)
 
     # swipe gestures
-    if previous_x is None:
-        previous_x = current_x
-        return "No Gesture"
+    if len(index_position_log) >= 2:
+        speed = max(index_position_log) - min(index_position_log)
+        # print(f"Index X-coordinates: {list(index_position_log)}")
+        # print(f"Calculated Speed: {speed}")
 
-    if current_x - previous_x > swipe_threshold:
-        previous_x = current_x
-        return "Swipe Right (Next Song)"
-    elif previous_x - current_x > swipe_threshold:
-        previous_x = current_x
-        return "Swipe Left (Previous Song)"
-    
-    previous_x = current_x
+        if abs(speed) > flick_speed_threshold:
+            if index_position_log.index(max(index_position_log)) > index_position_log.index(min(index_position_log)):
+                # print("RIGHT")
+                return "Next Song"
+            else:
+                # print("LEFT")
+                return "Previous Song"
 
     if is_play_pause:
         return "Pause/Play"
+    else:
+        return "No Gesture"
+
+# gesture log (debugging)
+def process_gesture_log():
+    # counts
+    gesture_counts = {
+        "Next Song": gesture_log.count("Next Song"),
+        "Previous Song": gesture_log.count("Previous Song"),
+        "Pause/Play": gesture_log.count("Pause/Play")
+    }
+
+    # log IFF gesture detected multiple times
+    if gesture_counts["Next Song"] >= 2:
+        return "Next Song Confirmed"
+    elif gesture_counts["Previous Song"] >= 2:
+        return "Previous Song Confirmed"
+    elif gesture_counts["Pause/Play"] >= 15:
+        return "Pause/Play Confirmed"
     else:
         return "No Gesture"
 
@@ -66,7 +90,11 @@ while True:
 
             # gesture detection
             gesture = detect_gesture(hand_landmarks.landmark)
-            cv2.putText(frame, gesture, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            gesture_log.append(gesture)
+
+            action = process_gesture_log()
+            print(action)
+            cv2.putText(frame, action, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
 
     cv2.imshow("Moonify", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
