@@ -1,2 +1,56 @@
 .env*.local
 __pycache__/
+# Ignore build output directories
+/Debug/
+/Release/
+/build/
+
+# Ignore object, dependency, and temporary files
+*.o
+*.d
+*.a
+*.tmp
+*.bak
+
+# Ignore binary, map, and log files
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.log
+*.srec
+
+# Ignore TouchGFX-generated files and directories
+TouchGFX/build/
+TouchGFX/generated/
+TouchGFX/build-env/
+
+# Ignore assets and cached files
+TouchGFX/assets/
+TouchGFX/caches/
+
+# Ignore CubeMX project settings (optional)
+/*.ioc
+
+# Ignore STM32CubeIDE settings files
+/.cproject
+/.project
+/.settings/
+
+# Ignore any IDE workspace files
+/.metadata
+*.launch
+
+# Ignore operating system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore user-specific files
+*.swp
+*.user
+*.bak
+*.log
+
+# Ignore custom build directories
+out/
