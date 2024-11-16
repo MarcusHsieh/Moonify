@@ -7,42 +7,44 @@ mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7)
 mp_draw = mp.solutions.drawing_utils
 
+# swipe detection
+previous_x = None
+swipe_threshold = 0.1
+
 # dist calc
 def calculate_distance(point1, point2):
     return math.sqrt((point2.x - point1.x) ** 2 + (point2.y - point1.y) ** 2)
 
 # primary gesture detection func
 def detect_gesture(landmarks):
+    global previous_x
+
+    # for pinch
     thumb_tip = landmarks[4]
     index_tip = landmarks[8]
-    middle_tip = landmarks[12]
-    ring_tip = landmarks[16]
-    pinky_tip = landmarks[20]
+    thumb_index_distance = calculate_distance(thumb_tip, index_tip)
 
-    index_base = landmarks[5]
-    middle_base = landmarks[9]
-    ring_base = landmarks[13]
-    pinky_base = landmarks[17]
+    # pinch threshold
+    is_play_pause = thumb_index_distance < 0.05
 
-    # fingers all open + spread
-    is_open_palm = (
-        calculate_distance(index_tip, index_base) > 0.1 and
-        calculate_distance(middle_tip, middle_base) > 0.1 and
-        calculate_distance(ring_tip, ring_base) > 0.1 and
-        calculate_distance(pinky_tip, pinky_base) > 0.1
-    )
+    # wrist detection for swipe
+    current_x = landmarks[0].x
 
-    # fist
-    is_fist = (
-        calculate_distance(index_tip, index_base) < 0.05 and
-        calculate_distance(middle_tip, middle_base) < 0.05 and
-        calculate_distance(ring_tip, ring_base) < 0.05 and
-        calculate_distance(pinky_tip, pinky_base) < 0.05
-    )
+    # swipe gestures
+    if previous_x is None:
+        previous_x = current_x
+        return "No Gesture"
 
-    if is_open_palm:
-        return "Next Song"
-    elif is_fist:
+    if current_x - previous_x > swipe_threshold:
+        previous_x = current_x
+        return "Swipe Right (Next Song)"
+    elif previous_x - current_x > swipe_threshold:
+        previous_x = current_x
+        return "Swipe Left (Previous Song)"
+    
+    previous_x = current_x
+
+    if is_play_pause:
         return "Pause/Play"
     else:
         return "No Gesture"
@@ -64,7 +66,7 @@ while True:
 
             # gesture detection
             gesture = detect_gesture(hand_landmarks.landmark)
-            cv2.putText(frame, gesture, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, gesture, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
 
     cv2.imshow("Moonify", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
