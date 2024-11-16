@@ -94,47 +94,54 @@ def pause_play():
             print("START PLAYBACK")
             sp.start_playback()
             cached_playback_status = "Playing"
+        small_update_playback_status()
     threading.Thread(target=toggle_playback).start()
     small_update_playback_status()
 
 # big update (song name, artist, playback status, album art)
 def big_update():
-    global cached_song_title, cached_artist_name, cached_playback_status, cached_album_art_image
-    playback = sp.current_playback()
-    if playback and playback['item']:
-        song_title = playback['item']['name']
-        artist_name = playback['item']['artists'][0]['name']
-        is_playing = playback['is_playing']
-        album_art_url = playback['item']['album']['images'][0]['url']
+    def fetch_big_update():
+        global cached_song_title, cached_artist_name, cached_playback_status, cached_album_art_image
+        playback = sp.current_playback()
+        if playback and playback['item']:
+            song_title = playback['item']['name']
+            artist_name = playback['item']['artists'][0]['name']
+            is_playing = playback['is_playing']
+            album_art_url = playback['item']['album']['images'][0]['url']
 
-        cached_song_title = song_title
-        cached_artist_name = artist_name
-        cached_playback_status = "Playing" if is_playing else "Paused"
+            cached_song_title = song_title
+            cached_artist_name = artist_name
+            cached_playback_status = "Playing" if is_playing else "Paused"
 
-        # fetch album art
-        response = requests.get(album_art_url)
-        if response.status_code == 200:
-            img_array = np.frombuffer(response.content, np.uint8)
-            cached_album_art_image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
-    else:
-        cached_song_title = "No Song"
-        cached_artist_name = "No Artist"
-        cached_playback_status = "Stopped"
-        cached_album_art_image = None
+            # fetch album art
+            response = requests.get(album_art_url)
+            if response.status_code == 200:
+                img_array = np.frombuffer(response.content, np.uint8)
+                cached_album_art_image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+        else:
+            cached_song_title = "No Song"
+            cached_artist_name = "No Artist"
+            cached_playback_status = "Stopped"
+            cached_album_art_image = None
+    threading.Thread(target=fetch_big_update).start()
 
 # small update (timestamp)
 def small_update_timestamp():
-    global cached_timestamp
-    playback = sp.current_playback()
-    if playback and playback['progress_ms']:
-        cached_timestamp = playback['progress_ms'] // 1000
+    def fetch_timestamp():
+        global cached_timestamp
+        playback = sp.current_playback()
+        if playback and playback['progress_ms']:
+            cached_timestamp = playback['progress_ms'] // 1000
+    threading.Thread(target=fetch_timestamp).start()
 
 # small update (playback status)
 def small_update_playback_status():
-    global cached_playback_status
-    playback = sp.current_playback()
-    if playback:
-        cached_playback_status = "Playing" if playback['is_playing'] else "Paused"
+    def fetch_status():
+        global cached_playback_status
+        playback = sp.current_playback()
+        if playback:
+            cached_playback_status = "Playing" if playback['is_playing'] else "Paused"
+    threading.Thread(target=fetch_status).start()
 
 def get_current_song_info():
     playback = sp.current_playback()
