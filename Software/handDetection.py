@@ -20,7 +20,8 @@ flick_speed_threshold = 0.3
 # confirmation logs
 gesture_log = deque(maxlen=15)
 last_action = "No Gesture"
-
+last_action_time = 0 
+cooldown_time = 1
 
 # caching song info and album art
 cached_song_title = None
@@ -94,6 +95,7 @@ def pause_play():
             sp.start_playback()
             cached_playback_status = "Playing"
     threading.Thread(target=toggle_playback).start()
+    small_update_playback_status()
 
 # big update (song name, artist, playback status, album art)
 def big_update():
@@ -145,7 +147,9 @@ def get_current_song_info():
 
 # gesture log + confirmation
 def process_gesture_log():
-    global last_action
+    global last_action, last_action_time
+
+    current_time = time.time()
 
     # counts
     gesture_counts = {
@@ -154,22 +158,29 @@ def process_gesture_log():
         "Pause/Play": gesture_log.count("Pause/Play")
     }
 
+
+    # prevent action spam
+    if current_time - last_action_time < cooldown_time:
+        return "No Gesture"
+
     # log IFF gesture detected multiple times
     if gesture_counts["Next Song"] >= 2 and last_action != "Next Song":
         last_action = "Next Song"
+        last_action_time = current_time
         next_song()
         return "Next Song Confirmed"
     elif gesture_counts["Previous Song"] >= 2 and last_action != "Previous Song":
         last_action = "Previous Song"
+        last_action_time = current_time
         previous_song()
         return "Previous Song Confirmed"
     elif gesture_counts["Pause/Play"] >= 15 and last_action != "Pause/Play":
         last_action = "Pause/Play"
+        last_action_time = current_time
         pause_play()
         return "Pause/Play Confirmed"
-    elif gesture_counts["Next Song"] < 2 and gesture_counts["Previous Song"] < 2 and gesture_counts["Pause/Play"] < 15:
-        last_action = "No Gesture"  # no special gesture detected => reset last action 
     else:
+        last_action = "No Gesture"
         return "No Gesture"
 
 
