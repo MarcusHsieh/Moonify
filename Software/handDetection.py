@@ -2,6 +2,8 @@ import cv2
 import mediapipe as mp
 import math
 from collections import deque
+from spotify_auth import sp
+import threading
 
 # start mediapipe hand module
 mp_hands = mp.solutions.hands
@@ -14,6 +16,7 @@ flick_speed_threshold = 0.3
 
 # confirmation logs
 gesture_log = deque(maxlen=15)
+last_action = "No Gesture"
 
 # dist calc
 def calculate_distance(point1, point2):
@@ -54,7 +57,27 @@ def detect_gesture(landmarks):
     else:
         return "No Gesture"
 
-# gesture log (debugging)
+# spotify playback functions
+def next_song():
+    threading.Thread(target=sp.next_track).start()
+    print("EXECUTE NEXT SONG")
+
+def previous_song():
+    threading.Thread(target=sp.previous_track).start()
+    print("EXECUTE PREVIOUS SONG")
+
+def pause_play():
+    def toggle_playback():
+        playback = sp.current_playback()
+        if playback and playback['is_playing']:
+            print("PAUSE PLAYBACK")
+            sp.pause_playback()
+        else:
+            print("START PLAYBACK")
+            sp.start_playback()
+    threading.Thread(target=toggle_playback).start()
+
+# gesture log + confirmation
 def process_gesture_log():
     global last_action
 
@@ -68,12 +91,15 @@ def process_gesture_log():
     # log IFF gesture detected multiple times
     if gesture_counts["Next Song"] >= 2 and last_action != "Next Song":
         last_action = "Next Song"
+        next_song()
         return "Next Song Confirmed"
     elif gesture_counts["Previous Song"] >= 2 and last_action != "Previous Song":
         last_action = "Previous Song"
+        previous_song()
         return "Previous Song Confirmed"
     elif gesture_counts["Pause/Play"] >= 15 and last_action != "Pause/Play":
         last_action = "Pause/Play"
+        pause_play()
         return "Pause/Play Confirmed"
     elif gesture_counts["Next Song"] < 2 and gesture_counts["Previous Song"] < 2 and gesture_counts["Pause/Play"] < 15:
         last_action = "No Gesture"  # no special gesture detected => reset last action 
