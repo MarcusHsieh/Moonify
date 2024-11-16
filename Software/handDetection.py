@@ -29,6 +29,7 @@ cached_artist_name = None
 cached_playback_status = None
 cached_album_art_image = None
 cached_timestamp = 0
+current_song_id = None
 last_big_update_time = 0
 last_small_update_time = 0
 api_call_interval_small = 1 # sec
@@ -125,14 +126,24 @@ def big_update():
             cached_album_art_image = None
     threading.Thread(target=fetch_big_update).start()
 
-# small update (timestamp)
-def small_update_timestamp():
-    def fetch_timestamp():
-        global cached_timestamp
+# small update (timestamp + natural song change)
+def monitor_song():
+    def fetch_monitoring_data():
+        global cached_timestamp, current_song_id
         playback = sp.current_playback()
         if playback and playback['progress_ms']:
-            cached_timestamp = playback['progress_ms'] // 1000
-    threading.Thread(target=fetch_timestamp).start()
+            new_timestamp = playback['progress_ms'] // 1000 
+            new_song_id = playback['item']['id']
+
+            # FOR NATURAL SONG CHANGE
+            # if song ID changes and timestamp is 0
+            if new_timestamp == 0 and new_song_id != current_song_id:
+                big_update()  
+
+            # update cached values
+            cached_timestamp = new_timestamp
+            current_song_id = new_song_id
+    threading.Thread(target=fetch_monitoring_data).start()
 
 # small update (playback status)
 def small_update_playback_status():
@@ -219,11 +230,11 @@ def start():
                 print(action)
                 cv2.putText(frame, action, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
 
-        # frequent small updates
+        # frequent small updates (1 sec)
         current_time = time.time()
         if current_time - last_small_update_time > api_call_interval_small:
             last_small_update_time = current_time
-            small_update_timestamp()
+            monitor_song()
         
         # display current song info
         cv2.putText(frame, f"Song: {cached_song_title}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
@@ -243,6 +254,8 @@ def start():
     cap.release()
     cv2.destroyAllWindows()
 
+#
+#
 #
 #
 #
