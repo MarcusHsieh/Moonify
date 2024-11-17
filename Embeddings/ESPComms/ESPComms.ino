@@ -47,6 +47,9 @@ void setup() {
 
   // Initializes the board to run with a baud rate of 115200.
   Serial.begin(115200);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   // Sets device as a wifi station. 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -73,10 +76,8 @@ void loop() {
 
   Serial.println("Incoming String");
   Serial.print(incoming);
-
-  digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
-  delay(50);                      
-  digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
-  delay(50); 
-
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(2000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(2000);
 }
