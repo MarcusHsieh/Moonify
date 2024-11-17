@@ -1,11 +1,11 @@
 void setup() {
-  // serial port for UART communication
+  // built-in serial port
   Serial.begin(115200);
 
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, LOW); 
+  digitalWrite(LED_BUILTIN, LOW);
 
-  Serial.println("ESP8266 UART Receiver Initialized!");
+  Serial.println("ESP8266 UART Receiver Initialized");
 }
 
 void loop() {
@@ -18,8 +18,27 @@ void loop() {
     Serial.println("Received data from Python script:");
     Serial.println(incomingData);
 
-    // should be blinking if constant data is received!
-    delay(500); 
+    // parse data
+    int delimiter1 = incomingData.indexOf('|');
+    int delimiter2 = incomingData.indexOf('|', delimiter1 + 1);
+    int delimiter3 = incomingData.indexOf('|', delimiter2 + 1);
+    int delimiter4 = incomingData.indexOf('|', delimiter3 + 1);
+
+    // extract info
+    String songName = incomingData.substring(0, delimiter1);
+    String artistName = incomingData.substring(delimiter1 + 1, delimiter2);
+    String albumURL = incomingData.substring(delimiter2 + 1, delimiter3);
+    String playbackStatus = incomingData.substring(delimiter3 + 1, delimiter4);
+    String timestamp = incomingData.substring(delimiter4 + 1);
+
+    // output data (debugging)
+    Serial.println("Song Name: " + songName);
+    Serial.println("Artist Name: " + artistName);
+    Serial.println("Album URL: " + albumURL);
+    Serial.println("Playback Status: " + playbackStatus);
+    Serial.println("Timestamp: " + timestamp);
+
+    delay(500);
     digitalWrite(LED_BUILTIN, LOW);
   }
 }
