@@ -44,6 +44,9 @@ void dataRecieved(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
 void setup() {
   // Initializes the board to run with a baud rate of 115200.
   Serial.begin(115200);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
   // Sets device as a wifi station. 
   WiFi.mode(WIFI_STA);
   WiFi.disconnect();
@@ -70,5 +73,8 @@ void loop() {
 
   Serial.println("Incoming String");
   Serial.print(incoming);
-
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(2000);
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(2000);
 }
