@@ -14,14 +14,14 @@ root.geometry("800x480")
 root.configure(bg="black") 
 
 try:
-    bg_image = PhotoImage(file="./space.png") 
+    bg_image = PhotoImage(file="/home/rp1/Moonify/embeddings/space.png") 
     background_label = Label(root, image=bg_image)
     background_label.place(relwidth=1, relheight=1)
 except:
     root.configure(bg="black")  
 
-bright_moon_image = PhotoImage(file="./fullMoon.png")
-dark_moon_image = PhotoImage(file="./moon.png")
+bright_moon_image = PhotoImage(file="/home/rp1/Moonify/embeddings/fullMoon.png")
+dark_moon_image = PhotoImage(file="/home/rp1/Moonify/embeddings/moon.png")
 
 frame = Frame(root, bg="#1e1e2f", bd=5)
 frame.place(relx=0.5, rely=0.1, relwidth=0.9, relheight=0.8, anchor='n')
