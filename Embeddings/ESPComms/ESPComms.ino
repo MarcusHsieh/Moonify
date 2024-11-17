@@ -3,9 +3,9 @@
 
 // Bool to contain message send success.
 bool success;
-
+int counter = 0;
 // Message contents. 
-String contents = "Hello World";
+String contents = "Hello World! This is Jus!";
 
 // Incoming String.
 String incoming;
@@ -25,8 +25,10 @@ void dataSent(uint8_t *mac_addr, uint8_t sendStatus) {
   Serial.print("Last Packet Send Status: ");
   if (sendStatus == 0){
     Serial.println("Delivery success");
+    counter++;
+    Serial.println(counter);
   }
-  else{
+  else { 
     Serial.println("Delivery fail");
   }
 }
@@ -37,11 +39,17 @@ void dataRecieved(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   Serial.print("Bytes received: ");
   Serial.println(len);
   incoming = incomingMsg.strmsg;
-
+  
+  digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
+  delay(50);                      
+  digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
+  delay(50); 
 }
 
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+
   // Initializes the board to run with a baud rate of 115200.
   Serial.begin(115200);
   // Sets device as a wifi station. 
@@ -69,6 +77,5 @@ void loop() {
   esp_now_send(recieverAddress, (uint8_t *) &contents, sizeof(contents));
 
   Serial.println("Incoming String");
-  Serial.print(incoming);
-
+  Serial.println(incoming);
 }
