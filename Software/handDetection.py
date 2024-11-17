@@ -160,7 +160,7 @@ def monitor_song():
             current_song_id = new_song_id
             
             # UNCOMMENT THIS TO SHOW LED BLINKING ON SONG CHANGE + PLAYBACK STATUS
-            send_to_esp32(f"Timestamp: {cached_timestamp}\n") 
+            # send_to_esp32(f"Timestamp: {cached_timestamp}\n") 
     threading.Thread(target=fetch_monitoring_data).start()
 
 # small update (playback status)
@@ -246,7 +246,8 @@ def start():
                 gesture_log.append(gesture)
 
                 action = process_gesture_log()
-                print(action)
+                if action != "No Gesture":
+                    print(action)
                 cv2.putText(frame, action, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
 
         # frequent small updates (1 sec)

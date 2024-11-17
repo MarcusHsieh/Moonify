@@ -1,7 +1,3 @@
-.env*.local
-__pycache__/
-*.cache
-
 # Ignore build output directories
 /Debug/
 /Release/
@@ -56,3 +52,7 @@ Thumbs.db
 
 # Ignore custom build directories
 out/
+
+.env*.local
+__pycache__/
+*.cache
