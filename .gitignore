@@ -1,5 +1,7 @@
 .env*.local
 __pycache__/
+*.cache
+
 # Ignore build output directories
 /Debug/
 /Release/

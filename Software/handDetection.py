@@ -7,6 +7,13 @@ import threading
 import requests
 import numpy as np
 import time
+import serial
+
+# serial communication w/ ESP32
+SERIAL_PORT = 'COM3'
+BAUD_RATE = 115200
+ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
+time.sleep(2)
 
 # start mediapipe hand module
 mp_hands = mp.solutions.hands
@@ -73,6 +80,12 @@ def detect_gesture(landmarks):
     else:
         return "No Gesture"
 
+# ESP32 data sending function
+def send_to_esp32(data):
+    if ser.is_open:
+        ser.write(data.encode('utf-8'))
+        print("Sent to ESP32:", data)
+
 # spotify playback functions
 def next_song():
     threading.Thread(target=sp.next_track).start()
@@ -109,16 +122,18 @@ def big_update():
             artist_name = playback['item']['artists'][0]['name']
             is_playing = playback['is_playing']
             album_art_url = playback['item']['album']['images'][0]['url']
-
-            cached_song_title = song_title
-            cached_artist_name = artist_name
-            cached_playback_status = "Playing" if is_playing else "Paused"
+            playback_status = "Playing" if is_playing else "Paused"
+            data_to_send = f"{song_title}|{artist_name}|{playback_status}\n"
+            send_to_esp32(data_to_send)
 
             # fetch album art
             response = requests.get(album_art_url)
             if response.status_code == 200:
                 img_array = np.frombuffer(response.content, np.uint8)
                 cached_album_art_image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+            cached_song_title = song_title
+            cached_artist_name = artist_name
+            cached_playback_status = playback_status
         else:
             cached_song_title = "No Song"
             cached_artist_name = "No Artist"
@@ -132,17 +147,20 @@ def monitor_song():
         global cached_timestamp, current_song_id
         playback = sp.current_playback()
         if playback and playback['progress_ms']:
-            new_timestamp = playback['progress_ms'] // 1000 
+            new_timestamp = playback['progress_ms'] // 1000
             new_song_id = playback['item']['id']
-
+            
             # FOR NATURAL SONG CHANGE
             # if song ID changes and timestamp is 0
             if new_timestamp == 0 and new_song_id != current_song_id:
-                big_update()  
+                big_update()
 
             # update cached values
             cached_timestamp = new_timestamp
             current_song_id = new_song_id
+            
+            # UNCOMMENT THIS TO SHOW LED BLINKING ON SONG CHANGE + PLAYBACK STATUS
+            send_to_esp32(f"Timestamp: {cached_timestamp}\n") 
     threading.Thread(target=fetch_monitoring_data).start()
 
 # small update (playback status)
@@ -151,7 +169,9 @@ def small_update_playback_status():
         global cached_playback_status
         playback = sp.current_playback()
         if playback:
-            cached_playback_status = "Playing" if playback['is_playing'] else "Paused"
+            playback_status = "Playing" if playback['is_playing'] else "Paused"
+            cached_playback_status = playback_status
+            send_to_esp32(f"Status: {cached_playback_status}\n")
     threading.Thread(target=fetch_status).start()
 
 def get_current_song_info():
@@ -175,7 +195,6 @@ def process_gesture_log():
         "Previous Song": gesture_log.count("Previous Song"),
         "Pause/Play": gesture_log.count("Pause/Play")
     }
-
 
     # prevent action spam
     if current_time - last_action_time < cooldown_time:
