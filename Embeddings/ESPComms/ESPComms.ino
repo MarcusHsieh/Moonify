@@ -39,6 +39,11 @@ void dataRecieved(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   Serial.print("Bytes received: ");
   Serial.println(len);
   incoming = incomingMsg.strmsg;
+  
+  digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
+  delay(50);                      
+  digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
+  delay(50); 
 }
 
 
@@ -72,11 +77,5 @@ void loop() {
   esp_now_send(recieverAddress, (uint8_t *) &contents, sizeof(contents));
 
   Serial.println("Incoming String");
-  Serial.print(incoming);
-
-  digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
-  delay(50);                      
-  digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
-  delay(50); 
-
+  Serial.println(incoming);
 }
