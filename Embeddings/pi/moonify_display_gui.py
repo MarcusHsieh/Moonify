@@ -3,7 +3,7 @@ import time
 from tkinter import Tk, Label, Frame, PhotoImage
 
 # Configure serial port (adjust "/dev/ttyS0" if using a different port)
-SERIAL_PORT = '/dev/ttyS0'  # Use '/dev/ttyUSB0' if connected via USB
+SERIAL_PORT = '/dev/serial0'  # Use '/dev/ttyUSB0' if connected via USB
 BAUD_RATE = 115200
 
 # Initialize serial connection
